@@ -98,7 +98,7 @@ vercel-deploy/
 If you want to test before deploying:
 
 **Requirements:**
-- Node.js 24.x or higher (Note: As of Feb 2025, Node 24.x is not yet released. Vercel will use the latest available LTS version like Node 20.x or 22.x)
+- Node.js 20.x or higher
 
 ```bash
 # Install Vercel CLI
@@ -114,6 +114,8 @@ Don't forget to create a `.env` file:
 ```
 ANTHROPIC_API_KEY=sk-ant-your-key-here
 ```
+
+**Note:** The serverless functions use CommonJS (`module.exports`) for maximum Vercel compatibility.
 
 ## 🆘 Troubleshooting
 

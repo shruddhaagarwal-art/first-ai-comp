@@ -1,5 +1,5 @@
 // Vercel Serverless Function - Team Verification
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -7,8 +7,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return res.status(200).end();
   }
 
   if (req.method !== 'POST') {
@@ -19,11 +18,11 @@ export default async function handler(req, res) {
     const { teamNumber, teamType } = req.body;
     const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
-    console.log(`Verifying ${teamType} team ${teamNumber}`);
+    console.log(`[VERIFY] Verifying ${teamType} team ${teamNumber}`);
 
     // Check if API key exists
     if (!ANTHROPIC_API_KEY) {
-      console.error('ANTHROPIC_API_KEY not set!');
+      console.error('[VERIFY] ANTHROPIC_API_KEY not set!');
       return res.status(200).json({ 
         success: true, 
         teamName: `${teamType} Team ${teamNumber}`,
@@ -36,22 +35,23 @@ export default async function handler(req, res) {
     // Try FTCScout API for FTC teams
     if (teamType === 'FTC') {
       try {
+        console.log('[VERIFY] Trying FTCScout API...');
         const ftcResponse = await fetch(`https://api.ftcscout.org/rest/v1/teams/${teamNumber}`);
         if (ftcResponse.ok) {
           const data = await ftcResponse.json();
           if (data && data.name) {
             teamName = data.name;
-            console.log('Found via FTCScout:', teamName);
+            console.log('[VERIFY] Found via FTCScout:', teamName);
           }
         }
       } catch (ftcError) {
-        console.log('FTCScout failed:', ftcError.message);
+        console.log('[VERIFY] FTCScout failed:', ftcError.message);
       }
     }
 
     // If not found, use AI to search firstinspires.org
     if (!teamName && ANTHROPIC_API_KEY) {
-      console.log('Searching with AI...');
+      console.log('[VERIFY] Searching with AI...');
       
       try {
         const aiResponse = await fetch('https://api.anthropic.com/v1/messages', {
@@ -74,6 +74,7 @@ export default async function handler(req, res) {
 
         if (aiResponse.ok) {
           const aiData = await aiResponse.json();
+          console.log('[VERIFY] AI Response received');
           
           if (aiData.content) {
             for (const item of aiData.content) {
@@ -81,17 +82,17 @@ export default async function handler(req, res) {
                 const text = item.text.trim();
                 if (text && text !== 'NOT_FOUND' && text.length < 100) {
                   teamName = text;
-                  console.log('Found via AI:', teamName);
+                  console.log('[VERIFY] Found via AI:', teamName);
                   break;
                 }
               }
             }
           }
         } else {
-          console.error('AI API error:', aiResponse.status);
+          console.error('[VERIFY] AI API error:', aiResponse.status);
         }
       } catch (aiError) {
-        console.error('AI search failed:', aiError.message);
+        console.error('[VERIFY] AI search failed:', aiError.message);
       }
     }
 
@@ -99,14 +100,16 @@ export default async function handler(req, res) {
       teamName = `${teamType} Team ${teamNumber}`;
     }
 
+    console.log('[VERIFY] Returning team name:', teamName);
     return res.status(200).json({ success: true, teamName });
 
   } catch (error) {
-    console.error('Handler error:', error);
+    console.error('[VERIFY] Handler error:', error.message, error.stack);
     return res.status(500).json({ 
       success: false, 
       error: 'Internal server error',
       message: error.message 
     });
   }
-}
+};
+

@@ -1,5 +1,5 @@
 // Vercel Serverless Function - AI Chat
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -7,8 +7,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return res.status(200).end();
   }
 
   if (req.method !== 'POST') {
@@ -19,17 +18,18 @@ export default async function handler(req, res) {
     const { question, teamType, teamNumber, teamName } = req.body;
     const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
-    console.log(`Question from ${teamType} ${teamNumber}: ${question}`);
+    console.log(`[CHAT] Question from ${teamType} ${teamNumber}: ${question}`);
 
     // Check if API key exists
     if (!ANTHROPIC_API_KEY) {
-      console.error('ANTHROPIC_API_KEY not set!');
+      console.error('[CHAT] ANTHROPIC_API_KEY not set!');
       return res.status(200).json({ 
         success: false, 
         answer: 'Error: API key not configured on server. Please contact administrator.'
       });
     }
 
+    console.log('[CHAT] Calling Anthropic API...');
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -60,7 +60,7 @@ Question: ${question}`
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('Anthropic API error:', errorData);
+      console.error('[CHAT] Anthropic API error:', errorData);
       return res.status(200).json({ 
         success: false, 
         answer: 'Sorry, there was an error with the AI service. Please try again.'
@@ -68,6 +68,7 @@ Question: ${question}`
     }
 
     const data = await response.json();
+    console.log('[CHAT] Response received from Anthropic');
     let answer = '';
     
     if (data.content) {
@@ -82,14 +83,16 @@ Question: ${question}`
       answer = 'Sorry, I couldn\'t generate a response. Please try again.';
     }
 
+    console.log('[CHAT] Returning answer');
     return res.status(200).json({ success: true, answer });
 
   } catch (error) {
-    console.error('Handler error:', error);
+    console.error('[CHAT] Handler error:', error.message, error.stack);
     return res.status(500).json({ 
       success: false, 
       answer: 'Sorry, an internal error occurred. Please try again.',
       error: error.message 
     });
   }
-}
+};
+
