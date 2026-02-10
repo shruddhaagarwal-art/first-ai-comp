@@ -15,12 +15,21 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { question, teamType, teamNumber, teamName } = req.body;
-  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-
-  console.log(`Question from ${teamType} ${teamNumber}: ${question}`);
-
   try {
+    const { question, teamType, teamNumber, teamName } = req.body;
+    const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+
+    console.log(`Question from ${teamType} ${teamNumber}: ${question}`);
+
+    // Check if API key exists
+    if (!ANTHROPIC_API_KEY) {
+      console.error('ANTHROPIC_API_KEY not set!');
+      return res.status(200).json({ 
+        success: false, 
+        answer: 'Error: API key not configured on server. Please contact administrator.'
+      });
+    }
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -49,6 +58,15 @@ Question: ${question}`
       })
     });
 
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Anthropic API error:', errorData);
+      return res.status(200).json({ 
+        success: false, 
+        answer: 'Sorry, there was an error with the AI service. Please try again.'
+      });
+    }
+
     const data = await response.json();
     let answer = '';
     
@@ -64,13 +82,13 @@ Question: ${question}`
       answer = 'Sorry, I couldn\'t generate a response. Please try again.';
     }
 
-    res.json({ success: true, answer });
+    return res.status(200).json({ success: true, answer });
 
   } catch (error) {
-    console.error('Error:', error);
-    res.json({ 
+    console.error('Handler error:', error);
+    return res.status(500).json({ 
       success: false, 
-      answer: 'Sorry, an error occurred. Please try again.',
+      answer: 'Sorry, an internal error occurred. Please try again.',
       error: error.message 
     });
   }

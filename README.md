@@ -62,11 +62,14 @@ Anyone can use this URL - no API key needed!
 ```
 vercel-deploy/
 ├── api/
+│   ├── chat.js           # AI chat endpoint
 │   ├── verify-team.js    # Team verification endpoint
-│   └── chat.js           # AI chat endpoint
+│   └── health.js         # Health check endpoint
 ├── index.html            # Frontend (must be in root)
 ├── vercel.json           # Vercel config
 ├── package.json          # Project info
+├── .env.example          # Example environment file
+├── .gitignore           # Git ignore rules
 └── README.md            # This file
 ```
 
@@ -111,24 +114,57 @@ ANTHROPIC_API_KEY=sk-ant-your-key-here
 
 ## 🆘 Troubleshooting
 
+**First Step: Check the Health Endpoint**
+Visit `https://your-project-name.vercel.app/api/health` in your browser.
+
+You should see:
+```json
+{
+  "status": "ok",
+  "apiKeyConfigured": true,
+  "message": "Server is ready"
+}
+```
+
+If `apiKeyConfigured` is `false`, your API key isn't set! Go to Settings → Environment Variables and add it.
+
+**How to View Server Logs:**
+1. Go to your Vercel dashboard
+2. Click on your project
+3. Click "Deployments" tab
+4. Click on the latest deployment
+5. Click "Functions" tab
+6. Click on any function (verify-team, chat)
+7. See the logs at the bottom
+
 **"SyntaxError: Unexpected token '<', "<!DOCTYPE" is not valid JSON"**
 - This means the HTML file is being served instead of the API endpoint
 - **Solution:** Make sure `index.html` is in the ROOT directory, not in a subfolder
 - Verify your file structure matches the one shown above
 - Redeploy after fixing the structure
 
+**"Server error" / "500 Internal Server Error"**
+1. Check the health endpoint first (see above)
+2. View function logs in Vercel dashboard
+3. Most common issue: `ANTHROPIC_API_KEY` not set
+4. Make sure you clicked "Redeploy" after adding the environment variable
+
 **"Team verification failed"**
 - Check that ANTHROPIC_API_KEY is set correctly in Vercel
 - Make sure you redeployed after adding the environment variable
+- Verify your API key is valid at console.anthropic.com
 
-**"Server error"**
-- Check Vercel deployment logs in your dashboard
-- Verify API key starts with `sk-ant-`
+**"Error: API key not configured on server"**
+- Your API key environment variable isn't set
+- Go to Settings → Environment Variables
+- Add: `ANTHROPIC_API_KEY` = your key
+- Click "Redeploy" in Deployments tab
 
 **API calls not working**
 - Environment variable might not be set
 - Redeploy after adding ANTHROPIC_API_KEY
 - Check the "Functions" tab in Vercel to see if API routes deployed correctly
+- Try the health endpoint to verify configuration
 
 ## 💰 Cost
 

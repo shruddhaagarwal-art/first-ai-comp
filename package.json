@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "description": "FIRST Teams AI Assistant - Vercel Deployment",
   "engines": {
-    "node": "24.x"
+    "node": "18.x"
   }
 }
