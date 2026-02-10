@@ -2,7 +2,8 @@
   "name": "first-teams-ai-assistant",
   "version": "1.0.0",
   "description": "FIRST Teams AI Assistant - Vercel Deployment",
+  "type": "module",
   "engines": {
-    "node": "18.x"
+    "node": "24.x"
   }
 }

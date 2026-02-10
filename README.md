@@ -97,6 +97,9 @@ vercel-deploy/
 
 If you want to test before deploying:
 
+**Requirements:**
+- Node.js 24.x or higher (Note: As of Feb 2025, Node 24.x is not yet released. Vercel will use the latest available LTS version like Node 20.x or 22.x)
+
 ```bash
 # Install Vercel CLI
 npm install -g vercel
